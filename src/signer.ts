@@ -13,7 +13,7 @@ export class Signer {
     return signer
   }
 
-  static async fromL2Key(l2Key: String): Promise<Signer> {
+  static async fromL2Key(l2Key: string): Promise<Signer> {
     const signer = new Signer()
     return signer
   }

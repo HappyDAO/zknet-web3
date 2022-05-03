@@ -18,19 +18,39 @@ export function l1ChainId(network?: Network): number {
 }
 
 export interface ContractAddress {
-    mainContract: string;
-    govContract: string;
+  mainContract: string
+  govContract: string
 }
 
 export interface Tokens {
-    [token: string]: {
-        address: string;
-        id: number;
-        symbol: string;
-        decimals: number;
-    };
+  [token: string]: {
+    address: string
+    id: number
+    symbol: string
+    decimals: number
+  }
 }
 
 // 0x-prefixed, hex encoded, ethereum account address
-export type Address = string;
+export type Address = string
 
+export interface TransactionReceipt {
+  executed: boolean
+  success?: boolean
+  failReason?: string
+}
+
+export class L2TransactionReceipt {
+  executed: boolean = false
+  success?: boolean
+  failReason?: string
+
+  public L2TransactionReceipt() {}
+}
+
+export class BalanceInfo {
+  balance: number = 0
+  decimal: number = 0
+
+  public BalanceInfo() {}
+}

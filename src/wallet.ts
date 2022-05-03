@@ -1,7 +1,8 @@
 import { ethers } from 'ethers'
+import { Transaction } from './operations'
 import { Provider } from './provider'
 import { Signer } from './signer'
-import { Address } from './types'
+import { Address, BalanceInfo } from './types'
 
 export class Wallet {
   protected constructor(
@@ -20,7 +21,7 @@ export class Wallet {
   static async fromL2Key(
     ethWallet: ethers.Signer,
     provider: Provider,
-    l2Key?: String
+    l2Key?: string
   ): Promise<Wallet> {
     if (l2Key == null) {
       // generate a new key
@@ -34,7 +35,7 @@ export class Wallet {
     return wallet
   }
 
-  async bind() {
+  async bind(): Promise<Transaction> {
     let timestamp = Date.parse(new Date().toString())
     let address = await this._ethSigner.getAddress()
     let msg = `bind l1-l2 key, timestamp[${timestamp}] address1[${address}] address2[${address}]`
@@ -43,5 +44,28 @@ export class Wallet {
     // l2 sign
 
     // submit tx
+    return new Transaction('', this.provider)
+  }
+
+  async deposit(token: string, amount: string, l1Key?: string): Promise<Transaction> {
+    // if l1Key not null, only invoke l2 deposit method
+    // if l1Key is null, invoke l1 and l2 deposit method
+    return new Transaction('', this.provider)
+  }
+
+  async withdraw(token: string, amount: string, receiverL1Key?: string): Promise<Transaction> {
+    return new Transaction('', this.provider)
+  }
+
+  async transfer(to: string, token: string, amount: string, fee: string): Promise<Transaction> {
+    return new Transaction('', this.provider)
+  }
+
+  async queryTransaction(txHash: string): Promise<Transaction> {
+    return new Transaction('', this.provider)
+  }
+
+  async queryBalance(token: string): Promise<BalanceInfo> {
+    return new BalanceInfo()
   }
 }

@@ -17,6 +17,7 @@ export class Provider {
 export async function newHttpProvider(
   address: string = 'http://127.0.0.1:8080',
   pollIntervalMilliSecs?: number,
+  apiKey: string = 'test key',
   network?: Network
 ): Promise<Provider> {
   const transport = new HTTPTransport(address)

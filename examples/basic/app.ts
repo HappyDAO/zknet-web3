@@ -1,5 +1,5 @@
 import * as zknet from '../../src/zknet-web3.ts'
-import { ethers } from 'ethers'
+import { ethers } from ''ethers
 
 let zknetWallet
 
