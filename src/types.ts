@@ -54,3 +54,22 @@ export class BalanceInfo {
 
   public BalanceInfo() {}
 }
+
+export class Order {
+  positionId: number = 0
+  tokenBuy: string = ''
+  tokenSell: string = ''
+  amountBuy: string = ''
+  amountSell: string = ''
+  orderType: string = ''
+  fee: string = ''
+  extend: string = ''
+
+  public Order() {}
+}
+
+export class SignedOrder extends Order {
+  timestamp: number = 0
+  signature: string = ''
+  public SignedOrder() {}
+}

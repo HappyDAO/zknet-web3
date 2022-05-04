@@ -2,7 +2,7 @@ import { ethers } from 'ethers'
 import { Transaction } from './operations'
 import { Provider } from './provider'
 import { Signer } from './signer'
-import { Address, BalanceInfo } from './types'
+import { Address, BalanceInfo, Order, SignedOrder } from './types'
 
 export class Wallet {
   protected constructor(
@@ -67,5 +67,18 @@ export class Wallet {
 
   async queryBalance(token: string): Promise<BalanceInfo> {
     return new BalanceInfo()
+  }
+
+  async positionDeposit(positionId: number, token: string, amount: string): Promise<Transaction> {
+    return new Transaction('', this.provider)
+  }
+
+  async positionWithdraw(positionId: number, token: string, amount: string): Promise<Transaction> {
+    return new Transaction('', this.provider)
+  }
+
+  async signOrder(order: Order): Promise<SignedOrder> {
+    const o2=new Order()
+    return new SignedOrder()
   }
 }
