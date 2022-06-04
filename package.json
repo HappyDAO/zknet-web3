@@ -82,13 +82,11 @@
     ]
   },
   "dependencies": {
-    "@walletconnect/web3-provider": "^1.7.8",
-    "axios": "^0.21.2",
     "ethers": "^5.6.4",
-    "web3": "^1.7.3",
-    "web3modal": "^1.9.7"
+    "zksync-web3": "^0.4.0"
   },
   "devDependencies": {
+    "axios": "^0.21.2",
     "@commitlint/cli": "^16.2.3",
     "@commitlint/config-conventional": "^16.2.1",
     "@rollup/plugin-commonjs": "^21.0.3",

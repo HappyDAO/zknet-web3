@@ -18,5 +18,5 @@
   },
   "include": [
     "src"
-  ]
+, "test/erc20.abi.ts"  ]
 }
