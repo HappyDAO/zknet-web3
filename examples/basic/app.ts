@@ -52,7 +52,7 @@ async function connect(index: number) {
   // const provider = new ethers.providers.Web3Provider(window.ethereum)
   // await provider.send('eth_requestAccounts', [])
   // const signer = provider.getSigner()
-  // const zknetWallet = await zknet.Wallet.fromEthSigner(signer, perpetual, zksyncUrl, provider)
+  // const zknetWallet = await zknet.Wallet.fromEthSigner(signer, contractAddress, zksyncUrl, provider)
 
   const zknetWallet = await zknet.Wallet.fromZksyncWallet(
     new zksync.Wallet(pks[index], zksyncProvider, ethProvider),
@@ -116,7 +116,7 @@ async function positionWithdraw(index: number) {
 async function signOrder(index: number) {
   const positionId = (index + 1).toString()
   const orderId = String(Math.floor(Date.now() / 1000)) + String(index)
-  let signedOrder = await zknetWallets[index].signOrder(contractAddress, {
+  let signedOrder = await zknetWallets[index].signOrder({
     id: orderId,
     type: 'LIMIT',
     positionId: positionId,

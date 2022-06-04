@@ -14,10 +14,11 @@ export class Wallet {
 
   static async fromEthSigner(
     ethWallet: ethers.Signer,
-    perpetual: zksync.Contract,
+    perpetualContractAddress: string,
     zksyncUrl: string,
-    provider: ethers.providers.Provider
+    l1Provider: ethers.providers.Provider
   ): Promise<Wallet> {
+    const perpetual = loadPerpetualContract(perpetualContractAddress)
     const l1Address = await ethWallet.getAddress()
     const sign = await ethWallet.signMessage('Sign this message to access zknet: ' + l1Address)
     const mnemonic = entropyToMnemonic(ethers.utils.sha256(sign))
@@ -25,7 +26,7 @@ export class Wallet {
     console.log(l2Key)
     const zksyncWallet = new zksync.Wallet(l2Key)
       .connect(new zksync.Provider(zksyncUrl))
-      .connectToL1(provider)
+      .connectToL1(l1Provider)
     return new Wallet(l1Address, zksyncWallet, perpetual, ethWallet)
   }
 
@@ -58,6 +59,16 @@ export class Wallet {
 
   getL1Address(): string {
     return this._l1Address
+  }
+
+  // TODO:
+  async depositToL2(token: number, amount: string) {
+   
+  }
+
+  // TODO:
+  async withdrawFromL2(token: number, amount: string) {
+   
   }
 
   async signBindTx(): Promise<string> {
@@ -95,12 +106,12 @@ export class Wallet {
     return await this.signTx(tx)
   }
 
-  async signOrder(contractAddress: string, order: Order): Promise<SignedOrder> {
+  async signOrder(order: Order): Promise<SignedOrder> {
     const domain = {
       name: 'ZKnet Perpetual',
       version: '1',
       chainId: 0,
-      verifyingContract: contractAddress,
+      verifyingContract: this.perpetual.address,
     }
 
     let signedOrder: SignedOrder = {
