@@ -1,31 +1,41 @@
-import { AbstractJSONRPCTransport, HTTPTransport } from './transport '
-import { ContractAddress, Network } from './types'
-import { TokenSet } from './utils'
+import Axios from 'axios'
 
 export class Provider {
-  contractAddress: ContractAddress | undefined
-  public tokenSet: TokenSet | undefined
-  public pollIntervalMilliSecs = 1000
-  public network?: Network
-  public providerType: 'RPC' | 'Rest'
+  constructor(
+    public address: string = 'http://localhost:8088',
+    public pollIntervalMilliSecs: number = 1000,
+    public apiKey: string = '333'
+  ) {}
 
-  constructor(public transport: AbstractJSONRPCTransport) {
-    this.providerType = 'RPC'
-  }
-}
-
-export async function newHttpProvider(
-  address: string = 'http://127.0.0.1:8080',
-  pollIntervalMilliSecs?: number,
-  network?: Network
-): Promise<Provider> {
-  const transport = new HTTPTransport(address)
-  const provider = new Provider(transport)
-  if (pollIntervalMilliSecs) {
-    provider.pollIntervalMilliSecs = pollIntervalMilliSecs
+  async sendTransaction(method: string, param = {}): Promise<string> {
+    let txHash = await this.request(method, param)
+    return txHash
   }
 
-  // todo: request contract addr and tokens
-  provider.network = network
-  return provider
+  private async request(method: string, param: any): Promise<any> {
+    const request = {
+      id: 1,
+      jsonrpc: '2.0',
+      method: method,
+      params: [param],
+    }
+
+    const response = await Axios.post(this.address + '/zknet', request, {
+      headers: {
+        'x-api-key': this.apiKey,
+        'Content-Type': 'application/json',
+      },
+    }).then((resp: { data: any }) => {
+      return resp.data
+    })
+
+    if ('result' in response) {
+      return response.result
+    } else if ('error' in response) {
+      console.log(response.error)
+      throw new Error(response.error.message)
+    } else {
+      throw new Error('Unknown Error')
+    }
+  }
 }

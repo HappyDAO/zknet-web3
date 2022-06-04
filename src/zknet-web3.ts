@@ -1,3 +1,3 @@
-export * as wallet from './wallet'
-export { Provider, newHttpProvider } from './provider'
-export { Wallet } from './wallet'
+export { Provider } from './provider'
+export { Wallet, loadPerpetualContract } from './wallet'
+export * from './types'
