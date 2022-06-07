@@ -1,3 +1,5 @@
+export type { Perpetual } from './perpetual'
+
 export const perpetualABI = [
   'constructor(string,string)',
   'event LogBind(string,string)',
@@ -25,6 +27,18 @@ export const perpetualABI = [
   'function positionWithdraw(uint64,uint32,uint256)',
   'function registerToken(address,uint32)',
   'function settlement(tuple(uint256,string,address,uint64,uint32,int256,uint256,string,uint32,bytes),tuple(uint256,string,address,uint64,uint32,int256,uint256,string,uint32,bytes),tuple(uint256,uint256,uint256))',
+  'function tokenAddress(uint32) view returns (address)',
   'function transfer(address,uint32,uint256,uint256)',
   'function withdraw(uint32,uint256)',
+]
+
+export const erc20ABI = [
+  'event Approval(address indexed,address indexed,uint256)',
+  'event Transfer(address indexed,address indexed,uint256)',
+  'function allowance(address,address) view returns (uint256)',
+  'function approve(address,uint256) returns (bool)',
+  'function balanceOf(address) view returns (uint256)',
+  'function totalSupply() view returns (uint256)',
+  'function transfer(address,uint256) returns (bool)',
+  'function transferFrom(address,address,uint256) returns (bool)',
 ]

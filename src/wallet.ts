@@ -1,14 +1,15 @@
-import { Bytes, ethers } from 'ethers'
-import { Address, Order, SignedOrder } from './types'
+import { BigNumber, Bytes, ethers } from 'ethers'
+import { Order, SignedOrder } from './types'
 import * as zksync from 'zksync-web3'
-import { perpetualABI } from './abi/Perpetual.abi'
+import { erc20ABI, Perpetual, perpetualABI } from './abi'
 import { entropyToMnemonic } from '@ethersproject/hdnode'
+import { ETH_ADDRESS } from 'zksync-web3/build/utils'
 
 export class Wallet {
   protected constructor(
     private _l1Address: string,
     private _zksyncWallet: zksync.Wallet,
-    public perpetual: zksync.Contract,
+    public perpetual: Perpetual,
     public ethWallet: ethers.Signer
   ) {}
 
@@ -18,27 +19,29 @@ export class Wallet {
     zksyncUrl: string,
     l1Provider: ethers.providers.Provider
   ): Promise<Wallet> {
-    const perpetual = loadPerpetualContract(perpetualContractAddress)
     const l1Address = await ethWallet.getAddress()
-    const sign = await ethWallet.signMessage('Sign this message to access zknet: ' + l1Address)
+    const sign = await ethWallet.signMessage(
+      'Sign this message to generate l2 account: ' + l1Address
+    )
     const mnemonic = entropyToMnemonic(ethers.utils.sha256(sign))
     const l2Key = ethers.Wallet.fromMnemonic(mnemonic).privateKey
     console.log(l2Key)
     const zksyncWallet = new zksync.Wallet(l2Key)
       .connect(new zksync.Provider(zksyncUrl))
       .connectToL1(l1Provider)
+    const perpetual = loadPerpetualContract(perpetualContractAddress).connect(zksyncWallet)
     return new Wallet(l1Address, zksyncWallet, perpetual, ethWallet)
   }
 
   static async fromZksyncWallet(
     zksyncWallet: zksync.Wallet,
-    perpetual: zksync.Contract
+    perpetual: Perpetual
   ): Promise<Wallet> {
-    perpetual.connect(zksyncWallet)
+    perpetual = perpetual.connect(zksyncWallet)
     const wallet = new Wallet(
       zksyncWallet.address,
       zksyncWallet,
-      perpetual,
+      perpetual as Perpetual,
       zksyncWallet._signerL1()
     )
     return wallet
@@ -61,14 +64,46 @@ export class Wallet {
     return this._l1Address
   }
 
-  // TODO:
-  async depositToL2(token: number, amount: string) {
-   
+  async depositToL2Account(token: number, amount: string) {
+    // TODO: cache token id -> address
+    const tokenAddress = await this.perpetual.tokenAddress(token)
+
+    if (tokenAddress == ETH_ADDRESS) {
+      const gasPrice = await this.ethWallet.getGasPrice()
+      await (
+        await this.ethWallet.sendTransaction({
+          to: this._zksyncWallet.address,
+          value: ethers.utils.parseEther(amount),
+          nonce: this.ethWallet.getTransactionCount('latest'),
+          gasLimit: ethers.utils.hexlify('0x100000'),
+          gasPrice: gasPrice,
+        })
+      ).wait()
+    } else {
+      const contract = new ethers.Contract(tokenAddress, erc20ABI, this.ethWallet)
+      await (await contract.transfer(this._zksyncWallet.address, amount)).wait()
+    }
+
+    await (
+      await this._zksyncWallet.deposit({
+        to: this._zksyncWallet.address,
+        token: tokenAddress,
+        amount: amount,
+        approveERC20: true,
+      })
+    ).waitFinalize()
   }
 
-  // TODO:
-  async withdrawFromL2(token: number, amount: string) {
-   
+  async withdrawFromL2Account(token: number, amount: string) {
+    const tokenAddress = await this.perpetual.tokenAddress(token)
+
+    await (
+      await this._zksyncWallet.withdraw({
+        amount: amount,
+        token: tokenAddress,
+        to: this._l1Address,
+      })
+    ).waitFinalize()
   }
 
   async signBindTx(): Promise<string> {
@@ -142,15 +177,32 @@ export class Wallet {
     return signedOrder
   }
 
-  async balanceOf(token: number): Promise<number> {
+  async balanceOf(token: number): Promise<BigNumber> {
     return await this.perpetual
       .connect(this._zksyncWallet)
-      .balanceOf(this._zksyncWallet.getAddress(), token)
+      .balanceOf(this._zksyncWallet.address, token)
+  }
+
+  async l2BalanceOf(token: number): Promise<BigNumber> {
+    const tokenAddress = await this.perpetual.tokenAddress(token)
+
+    return await this._zksyncWallet.getBalance(tokenAddress, 'committed')
+  }
+
+  async l1BalanceOf(token: number): Promise<BigNumber> {
+    const tokenAddress = await this.perpetual.tokenAddress(token)
+
+    if (tokenAddress == ETH_ADDRESS) {
+      return await this.ethWallet.getBalance()
+    } else {
+      const contract = new ethers.Contract(tokenAddress, erc20ABI, this.ethWallet)
+      return await contract.balanceOf(this._l1Address)
+    }
   }
 }
 
-export function loadPerpetualContract(contractAddress: string): zksync.Contract {
-  return new zksync.Contract(contractAddress, perpetualABI)
+export function loadPerpetualContract(contractAddress: string): Perpetual {
+  return new zksync.Contract(contractAddress, perpetualABI) as Perpetual
 }
 
 const orderTypes = {

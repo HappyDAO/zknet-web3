@@ -2,36 +2,358 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>login</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <link
+      href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.1/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <title>zknet-web3 demo</title>
   </head>
-  <body>
-    <h1>Wallet1</h1>
-    <h2>
-      l2 token balance:
-      <b id="balance0">0</b>
-    </h2>
-    <button id="connect0">connect</button>
-    <button id="deposit0">deposit</button>
-    <button id="positionDeposit0">position deposit</button>
-    <button id="sign0">sign order</button>
-    <button id="positionWithdraw0">position withdraw</button>
-    <button id="withdraw0">withdraw</button>
+  <body style="background-color: #ffffff">
+    <div class="container mt-5">
+      <div class="row">
+        <div class="col-sm">
+          <div class="text-center">
+            <h1>Wallet1</h1>
+          </div>
 
-    <h1>Wallet2</h1>
-    <h2>
-      l2 token balance:
-      <b id="balance1">0</b>
-    </h2>
-    <button id="connect1">connect</button>
-    <button id="deposit1">deposit</button>
-    <button id="positionDeposit1">position deposit</button>
-    <button id="sign1">sign order</button>
-    <button id="positionWithdraw1">position withdraw</button>
-    <button id="withdraw1">withdraw</button>
+          <div class="text-center mt-2" style="display: none" id="connected0">
+            <span class="badge badge-pill badge-success">connected</span>
+            <button type="button" class="btn btn-info btn-sm" id="refresh0">refresh</button>
+          </div>
 
-    <h1>mock bc</h1>
-    <button id="settlement">settlement</button>
+          <div class="mt-2 text-center">
+            <button type="button" class="btn btn-primary btn-sm" id="connect0">connect</button>
+          </div>
 
+          <form>
+            <div class="form-row">
+              <div class="form-group col-md-4 text-center">
+                <label for="l1Balance0">l1 account balance</label>
+                <input type="number" readonly class="form-control" id="l1Balance0" value="0" />
+              </div>
+              <div class="form-group col-md-4 text-center">
+                <label for="l2Balance0">l2 account balance</label>
+                <input type="number" readonly class="form-control" id="l2Balance0" value="0" />
+              </div>
+              <div class="form-group col-md-4 text-center">
+                <label for="balance0">zknet account balance</label>
+                <input type="number" readonly class="form-control" id="balance0" value="0" />
+              </div>
+            </div>
+          </form>
+
+          <form class="form-inline mt-2">
+            <div class="form-group mx-sm-3">
+              <input
+                type="number"
+                class="form-control"
+                id="prepareWallet0Input"
+                placeholder="token amount"
+              />
+            </div>
+            <button type="button" class="btn btn-primary" id="prepareWallet0">
+              get tokens from test account
+            </button>
+          </form>
+
+          <form class="form-inline mt-2">
+            <div class="form-group mx-sm-3">
+              <input
+                type="number"
+                class="form-control"
+                id="l2Deposit0Input"
+                placeholder="token amount"
+              />
+            </div>
+            <button type="button" class="btn btn-primary" id="l2Deposit0">deposit to l2</button>
+          </form>
+
+          <form class="form-inline mt-2">
+            <div class="form-group mx-sm-3">
+              <input
+                type="number"
+                class="form-control"
+                id="deposit0Input"
+                placeholder="token amount"
+              />
+            </div>
+            <button type="button" class="btn btn-primary" id="deposit0">deposit to zknet</button>
+          </form>
+
+          <form class="form-inline mt-2">
+            <div class="form-group mx-sm-3">
+              <input
+                type="number"
+                class="form-control"
+                id="positionDeposit0Input"
+                placeholder="token amount"
+              />
+            </div>
+            <button type="button" class="btn btn-primary" id="positionDeposit0">
+              position deposit
+            </button>
+          </form>
+
+          <form class="form-inline mt-2">
+            <div class="form-group mx-sm-3">
+              <input
+                type="number"
+                class="form-control"
+                id="sign0Input"
+                placeholder="token amount"
+              />
+            </div>
+            <button type="button" class="btn btn-primary" id="sign0">sign order</button>
+          </form>
+
+          <form class="form-inline mt-2">
+            <div class="form-group mx-sm-3">
+              <input
+                type="number"
+                class="form-control"
+                id="positionWithdraw0Input"
+                placeholder="token amount"
+              />
+            </div>
+            <button type="button" class="btn btn-primary" id="positionWithdraw0">
+              position withdraw
+            </button>
+          </form>
+
+          <form class="form-inline mt-2">
+            <div class="form-group mx-sm-3">
+              <input
+                type="number"
+                class="form-control"
+                id="withdraw0Input"
+                placeholder="token amount"
+              />
+            </div>
+            <button type="button" class="btn btn-primary" id="withdraw0">
+              withdraw from zknet
+            </button>
+          </form>
+
+          <form class="form-inline mt-2">
+            <div class="form-group mx-sm-3">
+              <input
+                type="number"
+                class="form-control"
+                id="l2Withdraw0Input"
+                placeholder="token amount"
+              />
+            </div>
+            <button type="button" class="btn btn-primary" id="l2Withdraw0">withdraw from l2</button>
+          </form>
+        </div>
+
+        <div class="col-sm">
+          <div class="text-center">
+            <h1>Wallet2</h1>
+          </div>
+
+          <div class="text-center mt-2" style="display: none" id="connected1">
+            <span class="badge badge-pill badge-success">connected</span>
+            <button type="button" class="btn btn-info btn-sm" id="refresh1">refresh</button>
+          </div>
+          <div class="mt-2 text-center">
+            <button type="button" class="btn btn-primary btn-sm" id="connect1">connect</button>
+          </div>
+
+          <form>
+            <div class="form-row">
+              <div class="form-group col-md-4 text-center">
+                <label for="l1Balance1">l1 account balance</label>
+                <input type="number" readonly class="form-control" id="l1Balance1" value="0" />
+              </div>
+              <div class="form-group col-md-4 text-center">
+                <label for="l2Balance1">l2 account balance</label>
+                <input type="number" readonly class="form-control" id="l2Balance1" value="0" />
+              </div>
+              <div class="form-group col-md-4 text-center">
+                <label for="balance1">zknet account balance</label>
+                <input type="number" readonly class="form-control" id="balance1" value="0" />
+              </div>
+            </div>
+          </form>
+
+          <form class="form-inline mt-2">
+            <div class="form-group mx-sm-3">
+              <input
+                type="number"
+                class="form-control"
+                id="prepareWallet1Input"
+                placeholder="token amount"
+              />
+            </div>
+            <button type="button" class="btn btn-primary" id="prepareWallet1">
+              get tokens from test account
+            </button>
+          </form>
+
+          <form class="form-inline mt-2">
+            <div class="form-group mx-sm-3">
+              <input
+                type="number"
+                class="form-control"
+                id="l2Deposit1Input"
+                placeholder="token amount"
+              />
+            </div>
+            <button type="button" class="btn btn-primary" id="l2Deposit1">deposit to l2</button>
+          </form>
+
+          <form class="form-inline mt-2">
+            <div class="form-group mx-sm-3">
+              <input
+                type="number"
+                class="form-control"
+                id="deposit1Input"
+                placeholder="token amount"
+              />
+            </div>
+            <button type="button" class="btn btn-primary" id="deposit1">deposit to zknet</button>
+          </form>
+
+          <form class="form-inline mt-2">
+            <div class="form-group mx-sm-3">
+              <input
+                type="number"
+                class="form-control"
+                id="positionDeposit1Input"
+                placeholder="token amount"
+              />
+            </div>
+            <button type="button" class="btn btn-primary" id="positionDeposit1">
+              position deposit
+            </button>
+          </form>
+
+          <form class="form-inline mt-2">
+            <div class="form-group mx-sm-3">
+              <input
+                type="number"
+                class="form-control"
+                id="sign1Input"
+                placeholder="token amount"
+              />
+            </div>
+            <button type="button" class="btn btn-primary" id="sign1">sign order</button>
+          </form>
+
+          <form class="form-inline mt-2">
+            <div class="form-group mx-sm-3">
+              <input
+                type="number"
+                class="form-control"
+                id="positionWithdraw1Input"
+                placeholder="token amount"
+              />
+            </div>
+            <button type="button" class="btn btn-primary" id="positionWithdraw1">
+              position withdraw
+            </button>
+          </form>
+
+          <form class="form-inline mt-2">
+            <div class="form-group mx-sm-3">
+              <input
+                type="number"
+                class="form-control"
+                id="withdraw1Input"
+                placeholder="token amount"
+              />
+            </div>
+            <button type="button" class="btn btn-primary" id="withdraw1">
+              withdraw from zknet
+            </button>
+          </form>
+
+          <form class="form-inline mt-2">
+            <div class="form-group mx-sm-3">
+              <input
+                type="number"
+                class="form-control"
+                id="l2Withdraw1Input"
+                placeholder="token amount"
+              />
+            </div>
+            <button type="button" class="btn btn-primary" id="l2Withdraw1">withdraw from l2</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="mt-3 text-center">
+        <h1>BC logic</h1>
+        <form class="form-inline mt-2 d-flex justify-content-center">
+          <div class="form-group mx-sm-3">
+            <input
+              type="number"
+              class="form-control"
+              id="settlementInput"
+              placeholder="settlement amount"
+            />
+          </div>
+          <button type="button" class="btn btn-primary" id="settlement">settlement orders</button>
+        </form>
+      </div>
+
+      <div class="row mt-3">
+        <div class="col-sm">
+          <div class="card mx-auto" style="width: 30rem">
+            <div class="card-body">
+              <h5 class="card-title text-center">order1</h5>
+              <pre class="card-text" id="order0"></pre>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm">
+          <div class="card mx-auto" style="width: 30rem">
+            <div class="card-body">
+              <h5 class="card-title text-center">order2</h5>
+              <pre class="card-text" id="order1"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="loadingDiv" style="display: none">
+      <div
+        id="over"
+        style="
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          opacity: 0.5;
+          z-index: 1000;
+        "
+      ></div>
+      <div
+        id="layout"
+        style="
+          position: absolute;
+          top: 40%;
+          left: 40%;
+          width: 20%;
+          height: 20%;
+          z-index: 1001;
+          text-align: center;
+        "
+      >
+        <img src="./loading.gif" />
+      </div>
+    </div>
+    <script
+      src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"
+      integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.1/js/bootstrap.bundle.min.js"></script>
     <script src="/__build__/basic.js"></script>
   </body>
 </html>
