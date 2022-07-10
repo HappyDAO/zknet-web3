@@ -32,7 +32,7 @@ async function sendToken(index: number, amount: string) {
   const gasPrice = await testAccountEthWallet.getGasPrice()
   await (
     await testAccountEthWallet.sendTransaction({
-      to: zknetWallets[index].getL1Address(),
+      to: zknetWallets[index].l1Address,
       value: ethers.utils.parseEther('10000'),
       nonce: testAccountEthWallet.getTransactionCount('latest'),
       gasLimit: ethers.utils.hexlify('0x100000'),
@@ -42,7 +42,7 @@ async function sendToken(index: number, amount: string) {
 
   await (
     await testAccountEthWallet.sendTransaction({
-      to: zknetWallets[index].getZksyncWallet().address,
+      to: zknetWallets[index].l2Address,
       value: ethers.utils.parseEther('10000'),
       nonce: testAccountEthWallet.getTransactionCount('latest'),
       gasLimit: ethers.utils.hexlify('0x100000'),
@@ -51,12 +51,12 @@ async function sendToken(index: number, amount: string) {
   ).wait()
 
   await (
-    await erc20L1.connect(testAccountEthWallet).transfer(zknetWallets[index].getL1Address(), amount)
+    await erc20L1.connect(testAccountEthWallet).transfer(zknetWallets[index].l1Address, amount)
   ).wait()
 
   await (
     await testAccountZksyncWallet.deposit({
-      to: zknetWallets[index].getZksyncWallet().address,
+      to: zknetWallets[index].l2Address,
       token: ETH_ADDRESS,
       amount: ethers.utils.parseEther('10000'),
       approveERC20: true,
@@ -69,7 +69,8 @@ async function sendToken(index: number, amount: string) {
 async function sendTransactionAndUpdateBalance(index: number, method: string, param = {}) {
   let txHash = await zknetProvider.sendTransaction(method, param)
   console.log('tx hash: ', txHash)
-  const res = await zksyncProvider.getTransactionReceipt(txHash)
+  const res = await zksyncProvider.getTransaction(txHash)
+  res.wait()
   console.log('tx res: ', res)
   await updateBalance(index)
 }
@@ -77,7 +78,9 @@ async function sendTransactionAndUpdateBalance(index: number, method: string, pa
 async function sendTransaction(method: string, param = {}) {
   let txHash = await zknetProvider.sendTransaction(method, param)
   console.log('tx hash: ', txHash)
-  const res = await zksyncProvider.getTransactionReceipt(txHash)
+  const res = await zksyncProvider.getTransaction(txHash)
+  res.wait()
+  console.log('tx res: ', res)
 }
 
 async function updatel1Balance(index: number) {
@@ -94,9 +97,7 @@ async function updatel2Balance(index: number) {
 
 async function updateBalance(index: number) {
   console.log('update balance')
-  let balance = await perpetual
-    .connect(zksyncWallets[index])
-    .balanceOf(zksyncWallets[index].address, ERC20_ID)
+  let balance = await zknetWallets[index].balanceOf(ERC20_ID)
   document.getElementById('balance' + index).value = balance.toString()
 }
 
@@ -110,9 +111,9 @@ async function connect(index: number) {
   //   new zksync.Wallet(pks[index], zksyncProvider, ethProvider),
   //   perpetual
   // )
-  zksyncWallets[index] = zknetWallet.getZksyncWallet()
+  zksyncWallets[index] = zknetWallet.zksyncWallet
   zknetWallets[index] = zknetWallet
-  console.log(zknetWallets[index].getZksyncWallet().address)
+  console.log(zknetWallets[index].l2Address)
   await updateBalance(index)
   await updatel1Balance(index)
   await updatel2Balance(index)

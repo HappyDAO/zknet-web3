@@ -6,12 +6,15 @@ import { entropyToMnemonic } from '@ethersproject/hdnode'
 import { ETH_ADDRESS } from 'zksync-web3/build/utils'
 
 export class Wallet {
+  public l2Address: string
   protected constructor(
-    private _l1Address: string,
-    private _zksyncWallet: zksync.Wallet,
+    public zksyncWallet: zksync.Wallet,
+    public l1Address: string,
     public perpetual: Perpetual,
     public ethWallet: ethers.Signer
-  ) {}
+  ) {
+    this.l2Address = zksyncWallet.address
+  }
 
   static async fromEthSigner(
     ethWallet: ethers.Signer,
@@ -30,7 +33,7 @@ export class Wallet {
       .connect(new zksync.Provider(zksyncUrl))
       .connectToL1(l1Provider)
     const perpetual = loadPerpetualContract(perpetualContractAddress).connect(zksyncWallet)
-    return new Wallet(l1Address, zksyncWallet, perpetual, ethWallet)
+    return new Wallet(zksyncWallet, l1Address, perpetual, ethWallet)
   }
 
   static async fromZksyncWallet(
@@ -39,8 +42,8 @@ export class Wallet {
   ): Promise<Wallet> {
     perpetual = perpetual.connect(zksyncWallet)
     const wallet = new Wallet(
-      zksyncWallet.address,
       zksyncWallet,
+      zksyncWallet.address,
       perpetual as Perpetual,
       zksyncWallet._signerL1()
     )
@@ -48,20 +51,12 @@ export class Wallet {
   }
 
   async signMessage(message: Bytes | string): Promise<string> {
-    return await this._zksyncWallet.signMessage(message)
+    return await this.zksyncWallet.signMessage(message)
   }
 
   private async signTx(tx: zksync.types.TransactionRequest): Promise<string> {
-    let tx2 = await this._zksyncWallet.populateTransaction(tx)
-    return await this._zksyncWallet.signTransaction(tx2)
-  }
-
-  getZksyncWallet(): zksync.Wallet {
-    return this._zksyncWallet
-  }
-
-  getL1Address(): string {
-    return this._l1Address
+    let tx2 = await this.zksyncWallet.populateTransaction(tx)
+    return await this.zksyncWallet.signTransaction(tx2)
   }
 
   async depositToL2Account(token: number, amount: string) {
@@ -72,7 +67,7 @@ export class Wallet {
       const gasPrice = await this.ethWallet.getGasPrice()
       await (
         await this.ethWallet.sendTransaction({
-          to: this._zksyncWallet.address,
+          to: this.zksyncWallet.address,
           value: ethers.utils.parseEther(amount),
           nonce: this.ethWallet.getTransactionCount('latest'),
           gasLimit: ethers.utils.hexlify('0x100000'),
@@ -81,12 +76,12 @@ export class Wallet {
       ).wait()
     } else {
       const contract = new ethers.Contract(tokenAddress, erc20ABI, this.ethWallet)
-      await (await contract.transfer(this._zksyncWallet.address, amount)).wait()
+      await (await contract.transfer(this.zksyncWallet.address, amount)).wait()
     }
 
     await (
-      await this._zksyncWallet.deposit({
-        to: this._zksyncWallet.address,
+      await this.zksyncWallet.deposit({
+        to: this.zksyncWallet.address,
         token: tokenAddress,
         amount: amount,
         approveERC20: true,
@@ -98,19 +93,25 @@ export class Wallet {
     const tokenAddress = await this.perpetual.tokenAddress(token)
 
     await (
-      await this._zksyncWallet.withdraw({
+      await this.zksyncWallet.withdraw({
         amount: amount,
         token: tokenAddress,
-        to: this._l1Address,
+        to: this.l1Address,
       })
     ).waitFinalize()
   }
 
+  async approveToken(token: number, amount: string) {
+    const tokenAddress = await this.perpetual.tokenAddress(token)
+    const erc20L2 = new zksync.Contract(tokenAddress, erc20ABI, this.zksyncWallet)
+    await (await erc20L2.approve(this.perpetual.address, amount)).wait()
+  }
+
   async signBindTx(): Promise<string> {
     let timestamp = Date.parse(new Date().toString())
-    let address = await this._zksyncWallet.getAddress()
+    let address = await this.zksyncWallet.getAddress()
     let msg = `bind l1-l2 key, timestamp[${timestamp}] address1[${address}] address2[${address}]`
-    const signature = await this._zksyncWallet.signMessage(msg)
+    const signature = await this.zksyncWallet.signMessage(msg)
     console.log('signature: ' + signature)
     // l2 sign
     return ''
@@ -150,7 +151,7 @@ export class Wallet {
     }
 
     let signedOrder: SignedOrder = {
-      trader: this._zksyncWallet.address,
+      trader: this.zksyncWallet.address,
       timestamp: Math.floor(Date.now() / 1000),
       signature: '',
       id: order.id,
@@ -173,20 +174,20 @@ export class Wallet {
       extend: signedOrder.extend,
       timestamp: signedOrder.timestamp,
     }
-    signedOrder.signature = await this._zksyncWallet._signTypedData(domain, orderTypes, message)
+    signedOrder.signature = await this.zksyncWallet._signTypedData(domain, orderTypes, message)
     return signedOrder
   }
 
   async balanceOf(token: number): Promise<BigNumber> {
     return await this.perpetual
-      .connect(this._zksyncWallet)
-      .balanceOf(this._zksyncWallet.address, token)
+      .connect(this.zksyncWallet)
+      .balanceOf(this.zksyncWallet.address, token)
   }
 
   async l2BalanceOf(token: number): Promise<BigNumber> {
     const tokenAddress = await this.perpetual.tokenAddress(token)
 
-    return await this._zksyncWallet.getBalance(tokenAddress, 'committed')
+    return await this.zksyncWallet.getBalance(tokenAddress, 'committed')
   }
 
   async l1BalanceOf(token: number): Promise<BigNumber> {
@@ -196,7 +197,7 @@ export class Wallet {
       return await this.ethWallet.getBalance()
     } else {
       const contract = new ethers.Contract(tokenAddress, erc20ABI, this.ethWallet)
-      return await contract.balanceOf(this._l1Address)
+      return await contract.balanceOf(this.l1Address)
     }
   }
 }
